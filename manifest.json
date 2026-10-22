@@ -1,15 +1,17 @@
 {
   "name": "Suivi Heures de Récupération",
   "short_name": "Suivi REC",
-  "start_url": "./index.html",
+  "description": "Application de gestion et suivi des heures de récupération",
+  "start_url": "./index.html?v=2",
   "display": "standalone",
   "background_color": "#f4f4f9",
   "theme_color": "#24292e",
   "icons": [
     {
-      "src": "./icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
