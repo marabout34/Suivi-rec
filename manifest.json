@@ -1,7 +1,7 @@
 {
   "name": "Suivi Heures de Récupération",
   "short_name": "Suivi REC",
-  "start_url": "./index.html?v=2",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f4f9",
   "theme_color": "#24292e",
