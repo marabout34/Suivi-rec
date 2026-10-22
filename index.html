@@ -5,23 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi Heures de Récupération</title>
     
+    <!-- LIAISON PWA INDISPENSABLE POUR PWABuilder ET L'INSTALLATION APK -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#24292e">
     <link rel="apple-touch-icon" href="icon-512.png">
 
+    <!-- Chargement sécurisé de SheetJS avec fallback hors-ligne -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 15px;
             background-color: #f4f4f9;
             color: #333;
         }
         .container {
-            max-width: 800px;
+            max-width: 650px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
@@ -31,336 +32,704 @@
         h1 {
             font-size: 1.4rem;
             margin-top: 0;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             color: #24292e;
-            text-align: center;
         }
         .summary-banner {
-            background: #24292e;
+            background: #eeb004;
             color: #fff;
             padding: 15px;
-            border-radius: 8px;
-            text-align: center;
+            border-radius: 10px;
             font-size: 1.1rem;
-            margin-bottom: 20px;
-        }
-        .summary-banner span {
-            color: #eeb004;
             font-weight: bold;
-        }
-        .agent-balances {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-            justify-content: center;
-        }
-        .agent-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-        .section-import {
-            background: #e9ecef;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
             text-align: center;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-        .form-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .form-group {
-            flex: 1;
-        }
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        input, select {
+        input[type="text"], input[type="date"], input[type="time"], select {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 0.95rem;
+            padding: 10px;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            background: #fff;
         }
-        .btn-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
+        .list-container {
+            min-height: 100px;
             margin-bottom: 20px;
         }
-        button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
+        .card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .btn-add { background: #28a745; color: white; }
-        .btn-export { background: #007bff; color: white; }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+        .card.card-rec-prise {
+            background: #fdf2f2;
+            border-color: #f5c6cb;
         }
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-            font-size: 0.8rem;
+        .card-info { flex: 1; }
+        .card-info h3 { margin: 0 0 6px 0; font-size: 1rem; color: #007bff; }
+        .card-info p { margin: 3px 0; font-size: 0.85rem; color: #555; }
+        .badge-rec {
+            display: inline-block; background: #28a745; color: white;
+            padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; margin-top: 4px;
         }
-        th { background-color: #f8f9fa; }
-        .btn-del {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 4px 6px;
-            border-radius: 4px;
-            cursor: pointer;
+        .badge-rec-moins { background: #dc3545; }
+        .badge-total {
+            display: inline-block; background: #17a2b8; color: white;
+            padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; margin-top: 4px; margin-left: 5px;
         }
+        .card-actions { display: flex; flex-direction: column; gap: 4px; margin-left: 10px; width: 70px; }
+        .action-row { display: flex; gap: 4px; }
+        .btn-edit { background: #ffc107; color: #333; border: none; padding: 6px 4px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; flex: 1; text-align: center; }
+        .btn-delete { background: #dc3545; color: white; border: none; padding: 6px 4px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; flex: 1; text-align: center; }
+        .btn-move { background: #e2e8f0; color: #4a5568; border: 1px solid #cbd5e1; padding: 4px 4px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; flex: 1; text-align: center; }
+        .empty-msg { color: #777; text-align: center; margin: 20px 0; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; padding: 20px; z-index: 1000;
+        }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        .checkbox-container {
+            display: flex; align-items: center; gap: 8px; margin: 10px 0; font-size: 0.9rem; background: #eef2f7; padding: 8px 12px; border-radius: 6px;
+        }
+        .checkbox-container input { width: 18px; height: 18px; cursor: pointer; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-danger { background: #dc3545; color: white; padding: 6px 10px; font-size: 0.8rem; }
+        .btn-gestion {
+            background-color: #6f42c1; color: white; border: none; padding: 10px; border-radius: 8px;
+            font-size: 0.9rem; cursor: pointer; width: 100%; margin-bottom: 15px; font-weight: bold;
+        }
+        .action-bar { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 15px; border-top: 1px solid #eee; }
+        .btn-action { flex: 1; min-width: 90px; padding: 12px 10px; border: none; border-radius: 8px; font-size: 0.9rem; cursor: pointer; color: white; text-align: center; }
+        .btn-add-main { background-color: #28a745; }
+        .btn-export { background-color: #007bff; }
+        .btn-import { background-color: #6c757d; }
+        .prenom-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e9ecef; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Suivi Heures de Récupération</h1>
-        
-        <div class="summary-banner">
-            <div>Solde Total Global : <span id="soldeGlobal">00:00</span></div>
-            <div class="agent-balances" id="agentBalances"></div>
-        </div>
 
-        <div class="section-import">
-            <label for="excelFile"><strong>Importer votre fichier Excel (`Suivi_REC.xlsx`) :</strong></label>
-            <input type="file" id="excelFile" accept=".xlsx, .xls">
-        </div>
+<div class="container">
+    <h1>Heures de Récupération</h1>
+    
+    <div class="summary-banner" id="soldeTotalBanner">Solde Total REC : 00:00</div>
 
-        <form id="recForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="date">DATE :</label>
-                    <input type="date" id="date" required>
-                </div>
-                <div class="form-group">
-                    <label for="agent">Nom / Intervenant :</label>
-                    <input type="text" id="agent" placeholder="Ex: FANNY">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="depart">DEPART :</label>
-                    <input type="time" id="depart">
-                </div>
-                <div class="form-group">
-                    <label for="arrivee">ARRIVEE :</label>
-                    <input type="time" id="arrivee">
-                </div>
-                <div class="form-group">
-                    <label for="rec">REC (HH:MM) :</label>
-                    <input type="text" id="rec" placeholder="Ex: 02:09 ou -07:48" required>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="lieu">LIEU :</label>
-                    <input type="text" id="lieu" placeholder="Ex: Nanterre">
-                </div>
-                <div class="form-group">
-                    <label for="motif">MOTIFS :</label>
-                    <input type="text" id="motif" placeholder="Ex: CF / REC / VAD">
-                </div>
-            </div>
+    <button class="btn-gestion" onclick="ouvrirModalGestionPrenoms()">👥 Gérer la liste des prénoms</button>
 
-            <div class="btn-container">
-                <button type="submit" class="btn-add">Ajouter la ligne</button>
-                <button type="button" class="btn-export" id="exportBtn">Exporter vers Excel</button>
-            </div>
-        </form>
+    <input type="text" id="searchInput" placeholder="Rechercher par lieu, motif, nom, date..." oninput="filtrerLignes()">
+    
+    <div id="contentArea" class="list-container"></div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>DATE</th>
-                    <th>DEPART</th>
-                    <th>ARRIVEE</th>
-                    <th>REC</th>
-                    <th>TOTAL</th>
-                    <th>LIEU</th>
-                    <th>MOTIFS</th>
-                    <th>Nom / Intervenant</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="recTableBody"></tbody>
-        </table>
+    <div class="action-bar">
+        <button class="btn-action btn-add-main" onclick="ouvrirModal()">+ Ajouter</button>
+        <button class="btn-action btn-export" onclick="exporterExcel()">Exporter</button>
+        <input type="file" id="inputImport" style="display: none;" accept=".xlsx, .xls" onchange="importerExcel(event)">
+        <button class="btn-action btn-import" onclick="document.getElementById('inputImport').click()">Importer</button>
     </div>
+</div>
 
-    <script>
-        let recEntries = JSON.parse(localStorage.getItem('recEntries')) || [];
+<!-- Modal Ajout / Modification -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Ajouter un déplacement / REC</h2>
+        <input type="hidden" id="editIndex" value="-1">
 
-        document.getElementById('date').valueAsDate = new Date();
+        <div class="form-group">
+            <label>Date :</label>
+            <input type="date" id="dateInput">
+        </div>
 
-        function parseHHMMToMinutes(hhmm) {
-            if (!hhmm) return 0;
-            let str = hhmm.toString().trim();
-            let isNegative = str.startsWith('-');
-            if (isNegative) str = str.substring(1);
-            let parts = str.split(':');
-            if (parts.length < 2) return 0;
-            let mins = (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
-            return isNegative ? -mins : mins;
-        }
+        <div class="checkbox-container" style="background: #fdf2f2; border: 1px solid #f5c6cb;">
+            <input type="checkbox" id="estRecPriseInput" onchange="basculerModeRecPrise()">
+            <label for="estRecPriseInput" style="color: #c82333; font-weight: bold; margin:0;">C'est une prise de REC (-7h48)</label>
+        </div>
 
-        function formatMinutesToHHMM(minutes) {
-            if (minutes <= 0) return "00:00";
-            let hrs = Math.floor(minutes / 60);
-            let mins = minutes % 60;
-            return `${hrs < 10 ? '0' : ''}${hrs}:${mins < 10 ? '0' : ''}${mins}`;
-        }
+        <div id="blocHorairesEtPause">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Départ :</label>
+                    <input type="time" id="departInput" onchange="calculerRecProvisoire()">
+                </div>
+                <div class="form-group">
+                    <label>Arrivée :</label>
+                    <input type="time" id="arriveeInput" onchange="calculerRecProvisoire()">
+                </div>
+            </div>
 
-        function saveAndRender() {
-            localStorage.setItem('recEntries', JSON.stringify(recEntries));
-            renderTable();
-        }
+            <div class="checkbox-container">
+                <input type="checkbox" id="pauseInput" onchange="calculerRecProvisoire()">
+                <label for="pauseInput">Déduire 45 min de pause repas (seul)</label>
+            </div>
+        </div>
 
-        function renderTable() {
-            const tbody = document.getElementById('recTableBody');
-            const agentBalancesContainer = document.getElementById('agentBalances');
-            tbody.innerHTML = '';
-            agentBalancesContainer.innerHTML = '';
+        <div class="form-group" style="background: #f0fdf4; padding: 10px; border-radius: 6px; border: 1px solid #bbf7d0;" id="blocPreviewRec">
+            <label style="color: #166534; margin: 0;">REC calculée : <span id="recPreview" style="font-size: 1.1rem; color: #15803d;">00:00</span></label>
+        </div>
 
-            let totalGlobalMins = 0;
-            let balancesByAgentMins = {};
+        <div class="form-row">
+            <div class="form-group">
+                <label>Lieu :</label>
+                <input type="text" id="lieuInput" placeholder="Ex: Nanterre">
+            </div>
+            <div class="form-group">
+                <label>Motif :</label>
+                <input type="text" id="motifInput" placeholder="Ex: Séminaire, CF, REC posée">
+            </div>
+        </div>
 
-            recEntries.forEach((entry, index) => {
-                const tr = document.createElement('tr');
-                let recMins = parseHHMMToMinutes(entry.rec);
-                
-                // Si la ligne elle-même est négative ou nulle lors d'un calcul individuel
-                let recDisplay = entry.rec;
-                if (recMins < 0 && entry.motif !== 'REC') {
-                    recMins = 0;
-                    recDisplay = "00:00";
-                }
+        <div class="form-group">
+            <label>Personne / Intervenant :</label>
+            <select id="nomSelect" onchange="verifierNouveauPrenom(this)"></select>
+        </div>
+        <div class="form-group" id="nouveauNomGroup" style="display:none;">
+            <label>Prénom personnalisé :</label>
+            <input type="text" id="nouveauNomInput" placeholder="Entrez le prénom">
+        </div>
 
-                totalGlobalMins += recMins;
-                if (totalGlobalMins < 0) totalGlobalMins = 0;
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+            <button class="btn btn-primary" onclick="enregistrerLigne()">Enregistrer</button>
+        </div>
+    </div>
+</div>
 
-                const agent = entry.agent || 'Non renseigné';
-                if (!balancesByAgentMins[agent]) balancesByAgentMins[agent] = 0;
-                balancesByAgentMins[agent] += recMins;
-                if (balancesByAgentMins[agent] < 0) balancesByAgentMins[agent] = 0;
+<!-- Modal Gestion des Prénoms -->
+<div id="prenomsModal" class="modal">
+    <div class="modal-content">
+        <h2>Gestion des Prénoms</h2>
+        <div class="form-row" style="margin-bottom: 15px;">
+            <input type="text" id="nouveauPrenomGlobal" placeholder="Nouveau prénom..." style="margin-bottom:0; flex:1;">
+            <button class="btn btn-primary" onclick="ajouterPrenomGlobal()">Ajouter</button>
+        </div>
+        <div id="listePrenomsContainer" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="fermerModalGestionPrenoms()">Fermer</button>
+        </div>
+    </div>
+</div>
 
-                tr.innerHTML = `
-                    <td>${entry.date || ''}</td>
-                    <td>${entry.depart || ''}</td>
-                    <td>${entry.arrivee || ''}</td>
-                    <td>${recDisplay}</td>
-                    <td>${formatMinutesToHHMM(totalGlobalMins)}</td>
-                    <td>${entry.lieu || ''}</td>
-                    <td>${entry.motif || ''}</td>
-                    <td>${agent}</td>
-                    <td><button class="btn-del" onclick="deleteEntry(${index})">X</button></td>
-                `;
-                tbody.appendChild(tr);
+<script>
+    const CONTRAT_MINUTES = 7 * 60 + 48; // 7h48
+    let deplacementLignes = [];
+    let listePrenoms = [];
+
+    try {
+        const savedLignes = localStorage.getItem('suivi_rec_lignes');
+        if (savedLignes) deplacementLignes = JSON.parse(savedLignes);
+    } catch (e) { deplacementLignes = []; }
+
+    try {
+        const savedPrenoms = localStorage.getItem('suivi_rec_prenoms');
+        if (savedPrenoms) listePrenoms = JSON.parse(savedPrenoms);
+    } catch (e) { listePrenoms = []; }
+
+    function sauvegarderPrenoms() {
+        try {
+            localStorage.setItem('suivi_rec_prenoms', JSON.stringify(listePrenoms));
+        } catch (e) {}
+        remplirSelectPrenoms();
+    }
+
+    function remplirSelectPrenoms(valeurSelectionnee = "") {
+        const select = document.getElementById('nomSelect');
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Sélectionner ou autre --</option>';
+        if (Array.isArray(listePrenoms)) {
+            listePrenoms.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p; 
+                opt.textContent = p;
+                if (p === valeurSelectionnee) opt.selected = true;
+                select.appendChild(opt);
             });
-
-            document.getElementById('soldeGlobal').innerText = formatMinutesToHHMM(totalGlobalMins);
-
-            Object.keys(balancesByAgentMins).forEach(agent => {
-                if (agent !== 'Non renseigné') {
-                    const card = document.createElement('div');
-                    card.className = 'agent-card';
-                    card.innerText = `${agent} : ${formatMinutesToHHMM(balancesByAgentMins[agent])}`;
-                    agentBalancesContainer.appendChild(card);
-                }
-            });
         }
+        const optAutre = document.createElement('option');
+        optAutre.value = "AUTRE";
+        optAutre.textContent = "✏️ Autre (saisir un nom)...";
+        select.appendChild(optAutre);
 
-        document.getElementById('recForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const entry = {
-                date: document.getElementById('date').value,
-                depart: document.getElementById('depart').value,
-                arrivee: document.getElementById('arrivee').value,
-                rec: document.getElementById('rec').value.trim(),
-                lieu: document.getElementById('lieu').value.trim(),
-                motif: document.getElementById('motif').value.trim(),
-                agent: document.getElementById('agent').value.trim()
-            };
-            recEntries.push(entry);
-            saveAndRender();
-            document.getElementById('rec').value = '';
-            document.getElementById('depart').value = '';
-            document.getElementById('arrivee').value = '';
-            document.getElementById('lieu').value = '';
-            document.getElementById('motif').value = '';
-        });
-
-        function deleteEntry(index) {
-            recEntries.splice(index, 1);
-            saveAndRender();
+        const champAutre = document.getElementById('nouveauNomGroup');
+        const inputAutre = document.getElementById('nouveauNomInput');
+        if (valeurSelectionnee && !listePrenoms.includes(valeurSelectionnee)) {
+            select.value = "AUTRE";
+            if (champAutre) champAutre.style.display = 'block';
+            if (inputAutre) inputAutre.value = valeurSelectionnee;
+        } else {
+            if (champAutre) champAutre.style.display = 'none';
         }
+    }
 
-        document.getElementById('exportBtn').addEventListener('click', () => {
-            if (recEntries.length === 0) {
-                alert("Aucune donnée à exporter !");
-                return;
+    function verifierNouveauPrenom(select) {
+        const champAutre = document.getElementById('nouveauNomGroup');
+        if (champAutre) {
+            champAutre.style.display = (select.value === "AUTRE") ? 'block' : 'none';
+        }
+    }
+
+    function basculerModeRecPrise() {
+        const estRecPrise = document.getElementById('estRecPriseInput').checked;
+        const blocHoraires = document.getElementById('blocHorairesEtPause');
+        const blocPreview = document.getElementById('blocPreviewRec');
+        const motifInput = document.getElementById('motifInput');
+        if (estRecPrise) {
+            if (blocHoraires) blocHoraires.style.display = 'none';
+            if (blocPreview) blocPreview.style.display = 'none';
+            if (motifInput) motifInput.value = "REC";
+        } else {
+            if (blocHoraires) blocHoraires.style.display = 'block';
+            if (blocPreview) blocPreview.style.display = 'block';
+            calculerRecProvisoire();
+        }
+    }
+
+    function minutesEnHeures(minutesTotal) {
+        const estNegatif = minutesTotal < 0;
+        const absMins = Math.abs(minutesTotal);
+        const h = Math.floor(absMins / 60);
+        const m = absMins % 60;
+        return (estNegatif ? '-' : '') + `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function formaterHeureExcel(val) {
+        if (val === undefined || val === null || val === "") return "";
+        let str = String(val).trim();
+        if (!isNaN(val) && typeof val === 'number') {
+            const totalMins = Math.round(val * 24 * 60);
+            const h = Math.floor(totalMins / 60) % 24;
+            const m = totalMins % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+        if (str.length === 4 && !str.includes(':')) str = str.slice(0,2) + ':' + str.slice(2);
+        return str;
+    }
+
+    function formaterDateExcel(val) {
+        if (val === undefined || val === null || val === "") return "";
+        let str = String(val).trim();
+        if (!isNaN(val) && typeof val === 'number') {
+            const dateObj = new Date((val - (25567 + 2)) * 86400 * 1000);
+            if (!isNaN(dateObj.getTime())) return dateObj.toISOString().split('T')[0];
+        }
+        if (str.includes('/')) {
+            const parts = str.split('/');
+            if (parts.length === 3 && parts[2].length === 4) {
+                return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
             }
-            const exportData = recEntries.map(e => ({
-                "DATE": e.date,
-                "DEPART": e.depart,
-                "ARRIVEE": e.arrivee,
-                "REC": e.rec,
-                "LIEU": e.lieu,
-                "MOTIFS": e.motif,
-                "Nom / Intervenant": e.agent
-            }));
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "2026");
-            XLSX.writeFile(wb, `Suivi_REC_${new Date().toISOString().slice(0,10)}.xlsx`);
-        });
+        }
+        return str.split('T')[0];
+    }
 
-        document.getElementById('excelFile').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+    function convertirHeureEnMinutes(heureStr) {
+        if (!heureStr || typeof heureStr !== 'string') return 0;
+        const net = heureStr.trim();
+        const estNeg = net.startsWith('-');
+        const clean = estNeg ? net.substring(1) : net;
+        const parts = clean.split(':');
+        if (parts.length >= 2) {
+            const h = parseInt(parts[0], 10) || 0;
+            const m = parseInt(parts[1], 10) || 0;
+            const total = h * 60 + m;
+            return estNeg ? -total : total;
+        }
+        return 0;
+    }
 
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const data = new Uint8Array(event.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+    function calculerRecLigne(item) {
+        if (item.estRecPrise) {
+            return -CONTRAT_MINUTES; // -7h48
+        }
+        if (!item.depart || !item.arrivee) return 0;
+        const [hD, mD] = item.depart.split(':').map(Number);
+        const [hA, mA] = item.arrivee.split(':').map(Number);
+        if (isNaN(hD) || isNaN(mD) || isNaN(hA) || isNaN(mA)) return 0;
 
-                if (jsonData.length > 0) {
-                    recEntries = jsonData.map(row => ({
-                        date: row.DATE || row.Date || '',
-                        depart: row.DEPART || row.Depart || '',
-                        arrivee: row.ARRIVEE || row.Arrivee || '',
-                        rec: row.REC ? row.REC.toString() : '00:00',
-                        lieu: row.LIEU || row.Lieu || '',
-                        motif: row.MOTIFS || row.Motifs || row.MOTIF || '',
-                        agent: row['Nom / Intervenant'] || row.Agent || row.Prenom || ''
-                    }));
-                    saveAndRender();
-                    alert("Importation réussie avec la structure de votre fichier !");
-                } else {
-                    alert("Le fichier Excel semble vide.");
+        let minDepart = hD * 60 + mD;
+        let minArrivee = hA * 60 + mA;
+        if (minArrivee < minDepart) minArrivee += 24 * 60;
+        
+        let dureeBrute = minArrivee - minDepart;
+        if (item.pauseDeduite) dureeBrute -= 45;
+
+        let diff = dureeBrute - CONTRAT_MINUTES;
+        return diff > 0 ? diff : 0;
+    }
+
+    function revaliderEtSauvegarder() {
+        let cumul = 0;
+        deplacementLignes.forEach((item) => {
+            let recMins = 0;
+            if (item.recImportee !== undefined && item.recImportee !== "" && item.recImportee !== null) {
+                recMins = convertirHeureEnMinutes(item.recImportee);
+            } else {
+                recMins = calculerRecLigne(item);
+            }
+            
+            item.recMins = recMins;
+            item.recStr = minutesEnHeures(recMins);
+            cumul += recMins;
+            item.recTotalMins = cumul;
+            item.recTotalStr = minutesEnHeures(cumul);
+            
+            if (item.nom && item.nom.trim() !== "") {
+                const nomClean = item.nom.trim().toUpperCase();
+                if (!listePrenoms.includes(nomClean)) {
+                    listePrenoms.push(nomClean);
                 }
-            };
-            reader.readAsArrayBuffer(file);
+            }
         });
+        sauvegarderPrenoms();
+        try {
+            localStorage.setItem('suivi_rec_lignes', JSON.stringify(deplacementLignes));
+        } catch (e) {}
+        afficherLignes();
+    }
 
-        renderTable();
-    </script>
+    function afficherLignes(listeAffichee = deplacementLignes) {
+        const contentArea = document.getElementById('contentArea');
+        if (!contentArea) return;
+        contentArea.innerHTML = '';
+        const soldeTotalBanner = document.getElementById('soldeTotalBanner');
+        const dernierCumul = deplacementLignes.length > 0 ? deplacementLignes[deplacementLignes.length - 1].recTotalMins : 0;
+        if (soldeTotalBanner) {
+            soldeTotalBanner.innerText = `Solde Total REC : ${minutesEnHeures(dernierCumul)}`;
+        }
+
+        if (!Array.isArray(listeAffichee) || listeAffichee.length === 0) {
+            contentArea.innerHTML = '<p class="empty-msg">Aucun déplacement enregistré. Appuyez sur + Ajouter ou Importer.</p>';
+            return;
+        }
+
+        listeAffichee.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = item.estRecPrise ? 'card card-rec-prise' : 'card';
+            
+            let dateFormatee = item.date || '';
+            if (item.date && item.date.includes('-')) {
+                const p = item.date.split('-');
+                if (p.length === 3) dateFormatee = `${p[2]}/${p[1]}/${p[0]}`;
+            }
+
+            let infosTexte = "";
+            if (item.estRecPrise) {
+                infosTexte = `<p><b>Type :</b> 🔴 REC posée (-7h48)</p>`;
+            } else {
+                const pauseTxt = item.pauseDeduite ? " (pause 45m)" : " (sans pause)";
+                infosTexte = `
+                    <p><b>Horaires :</b> ${item.depart || '--:--'} ➔ ${item.arrivee || '--:--'}${pauseTxt}</p>
+                    <p><b>Motif :</b> ${escapeHtml(item.motif || '-')} | <b>Personne :</b> ${escapeHtml(item.nom || '-')}</p>
+                `;
+            }
+
+            const badgeClass = item.estRecPrise ? "badge-rec badge-rec-moins" : "badge-rec";
+
+            card.innerHTML = `
+                <div class="card-info">
+                    <h3>📅 ${dateFormatee} - ${escapeHtml(item.lieu || (item.estRecPrise ? 'Repos REC' : 'Sans lieu'))}</h3>
+                    ${infosTexte}
+                    <div>
+                        <span class="${badgeClass}">REC : ${item.estRecPrise ? '-' + item.recStr : item.recStr}</span>
+                        <span class="badge-total">CUMUL : ${item.recTotalStr}</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <div class="action-row">
+                        <button class="btn-edit" onclick="ouvrirModalEdition(${index})">✏️</button>
+                        <button class="btn-delete" onclick="supprimerLigne(${index})">🗑️</button>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn-move" onclick="deplacerLigne(${index}, -1)">▲</button>
+                        <button class="btn-move" onclick="deplacerLigne(${index}, 1)">▼</button>
+                    </div>
+                </div>
+            `;
+            contentArea.appendChild(card);
+        });
+    }
+
+    function escapeHtml(text) {
+        return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function calculerRecProvisoire() {
+        const dep = document.getElementById('departInput').value;
+        const arr = document.getElementById('arriveeInput').value;
+        const pause = document.getElementById('pauseInput').checked;
+        const recPreview = document.getElementById('recPreview');
+        if (dep && arr && recPreview) {
+            const dummyItem = { depart: dep, arrivee: arr, pauseDeduite: pause, estRecPrise: false };
+            recPreview.innerText = minutesEnHeures(calculerRecLigne(dummyItem));
+        } else if (recPreview) {
+            recPreview.innerText = "00:00";
+        }
+    }
+
+    function ouvrirModal() {
+        const modal = document.getElementById('addModal');
+        if (modal) modal.style.display = 'flex';
+        document.getElementById('modalTitle').innerText = "Ajouter un déplacement / REC";
+        document.getElementById('editIndex').value = "-1";
+        document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+        document.getElementById('estRecPriseInput').checked = false;
+        document.getElementById('departInput').value = "08:00";
+        document.getElementById('arriveeInput').value = "17:00";
+        document.getElementById('pauseInput').checked = false;
+        document.getElementById('lieuInput').value = "";
+        document.getElementById('motifInput').value = "";
+        basculerModeRecPrise();
+        remplirSelectPrenoms("");
+    }
+
+    function ouvrirModalEdition(index) {
+        const modal = document.getElementById('addModal');
+        if (modal) modal.style.display = 'flex';
+        const item = deplacementLignes[index];
+        document.getElementById('modalTitle').innerText = "Modifier l'entrée";
+        document.getElementById('editIndex').value = index;
+        document.getElementById('dateInput').value = item.date || "";
+        document.getElementById('estRecPriseInput').checked = !!item.estRecPrise;
+        document.getElementById('departInput').value = item.depart || "";
+        document.getElementById('arriveeInput').value = item.arrivee || "";
+        document.getElementById('pauseInput').checked = !!item.pauseDeduite;
+        document.getElementById('lieuInput').value = item.lieu || "";
+        document.getElementById('motifInput').value = item.motif || "";
+        basculerModeRecPrise();
+        remplirSelectPrenoms(item.nom || "");
+    }
+
+    function fermerModal() { 
+        const modal = document.getElementById('addModal');
+        if (modal) modal.style.display = 'none'; 
+    }
+
+    function ouvrirModalGestionPrenoms() { 
+        const modal = document.getElementById('prenomsModal');
+        if (modal) modal.style.display = 'flex'; 
+        afficherListePrenomsModal(); 
+    }
+
+    function fermerModalGestionPrenoms() { 
+        const modal = document.getElementById('prenomsModal');
+        if (modal) modal.style.display = 'none'; 
+    }
+
+    function afficherListePrenomsModal() {
+        const container = document.getElementById('listePrenomsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        if (!listePrenoms || listePrenoms.length === 0) {
+            container.innerHTML = '<p style="color: #777; font-size: 0.85rem; text-align: center;">Aucun prénom enregistré.</p>';
+            return;
+        }
+        listePrenoms.forEach((p, idx) => {
+            const div = document.createElement('div');
+            div.className = 'prenom-item';
+            div.innerHTML = `<span>${p}</span> <button class="btn btn-danger" onclick="supprimerPrenomGlobal(${idx})">Supprimer</button>`;
+            container.appendChild(div);
+        });
+    }
+
+    function ajouterPrenomGlobal() {
+        const input = document.getElementById('nouveauPrenomGlobal');
+        if (!input) return;
+        const val = input.value.trim().toUpperCase();
+        if (val && !listePrenoms.includes(val)) {
+            listePrenoms.push(val);
+            input.value = '';
+            sauvegarderPrenoms();
+            afficherListePrenomsModal();
+        }
+    }
+
+    function supprimerPrenomGlobal(idx) {
+        listePrenoms.splice(idx, 1);
+        sauvegarderPrenoms();
+        afficherListePrenomsModal();
+    }
+
+    function enregistrerLigne() {
+        const index = parseInt(document.getElementById('editIndex').value, 10);
+        const date = document.getElementById('dateInput').value;
+        const estRecPrise = document.getElementById('estRecPriseInput').checked;
+        const depart = estRecPrise ? "" : document.getElementById('departInput').value;
+        const arrivee = estRecPrise ? "" : document.getElementById('arriveeInput').value;
+        const pauseDeduite = document.getElementById('pauseInput').checked;
+        const lieu = document.getElementById('lieuInput').value.trim();
+        const motif = document.getElementById('motifInput').value.trim();
+        
+        let nom = document.getElementById('nomSelect').value;
+        if (nom === "AUTRE") {
+            nom = document.getElementById('nouveauNomInput').value.trim().toUpperCase();
+            if (nom && !listePrenoms.includes(nom)) {
+                listePrenoms.push(nom);
+                sauvegarderPrenoms();
+            }
+        }
+
+        if (!date) { alert("Veuillez renseigner la date."); return; }
+        if (!estRecPrise && (!depart || !arrivee)) { alert("Veuillez renseigner les horaires."); return; }
+
+        const nouvelleLigne = { date, estRecPrise, depart, arrivee, pauseDeduite, lieu, motif, nom, recImportee: undefined };
+        if (isNaN(index) || index === -1) {
+            deplacementLignes.push(nouvelleLigne);
+        } else {
+            deplacementLignes[index] = nouvelleLigne;
+        }
+
+        revaliderEtSauvegarder();
+        fermerModal();
+    }
+
+    function supprimerLigne(index) {
+        if (confirm("Supprimer cette entrée ?")) {
+            deplacementLignes.splice(index, 1);
+            revaliderEtSauvegarder();
+        }
+    }
+
+    function deplacerLigne(index, dir) {
+        const nIndex = index + dir;
+        if (nIndex < 0 || nIndex >= deplacementLignes.length) return;
+        const temp = deplacementLignes.splice(index, 1)[0];
+        deplacementLignes.splice(nIndex, 0, temp);
+        revaliderEtSauvegarder();
+    }
+
+    function filtrerLignes() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        afficherLignes(deplacementLignes.filter(f => 
+            (f.lieu && f.lieu.toLowerCase().includes(query)) ||
+            (f.motif && f.motif.toLowerCase().includes(query)) ||
+            (f.nom && f.nom.toLowerCase().includes(query)) ||
+            (f.date && f.date.includes(query))
+        ));
+    }
+
+    function exporterExcel() {
+        if (deplacementLignes.length === 0) { alert("Aucune donnée à exporter."); return; }
+        if (typeof XLSX === 'undefined') { alert("La bibliothèque Excel n'est pas chargée."); return; }
+        const dataExcel = deplacementLignes.map(item => ({
+            "DATE": item.date,
+            "DEPART": item.depart,
+            "ARRIVEE": item.arrivee,
+            "REC": item.estRecPrise ? "-07:48" : item.recStr,
+            "REC TOTAL": item.recTotalStr,
+            "LIEU": item.lieu,
+            "MOTIFS": item.estRecPrise ? "REC" : item.motif,
+            "Nom / Intervenant": item.nom
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(dataExcel);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "2026");
+        XLSX.writeFile(workbook, `Suivi_REC_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function importerExcel(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (typeof XLSX === 'undefined') { alert("La bibliothèque Excel n'est pas chargée."); return; }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                
+                if (rawRows.length === 0) {
+                    alert("Le fichier Excel est vide.");
+                    return;
+                }
+
+                let headerIndex = -1;
+                for (let i = 0; i < rawRows.length; i++) {
+                    const row = rawRows[i];
+                    for (let j = 0; j < row.length; j++) {
+                        if (String(row[j]).trim().toUpperCase() === "DATE") {
+                            headerIndex = i;
+                            break;
+                        }
+                    }
+                    if (headerIndex !== -1) break;
+                }
+
+                if (headerIndex === -1) {
+                    alert("Impossible de trouver la colonne 'DATE' dans votre fichier Excel.");
+                    return;
+                }
+
+                const headers = rawRows[headerIndex].map(h => String(h).trim().toUpperCase());
+                const idxDate = headers.findIndex(h => h.includes("DATE"));
+                const idxDepart = headers.findIndex(h => h.includes("DEPART") || h.includes("DÉPART"));
+                const idxArrivee = headers.findIndex(h => h.includes("ARRIVEE") || h.includes("ARRIVÉE"));
+                const idxRec = headers.findIndex(h => h === "REC");
+                const idxLieu = headers.findIndex(h => h.includes("LIEU"));
+                const idxMotif = headers.findIndex(h => h.includes("MOTIF"));
+                let idxNom = headers.findIndex(h => h.includes("NOM") || h.includes("INTERVENANT") || h.includes("ACCOMPAGNANT"));
+                if (idxNom === -1) idxNom = 7;
+
+                deplacementLignes = [];
+                for (let i = headerIndex + 1; i < rawRows.length; i++) {
+                    const r = rawRows[i];
+                    if (!r || r.length === 0) continue;
+                    
+                    const d = idxDate !== -1 ? r[idxDate] : "";
+                    const dep = idxDepart !== -1 ? r[idxDepart] : "";
+                    const arr = idxArrivee !== -1 ? r[idxArrivee] : "";
+                    const recVal = idxRec !== -1 ? r[idxRec] : "";
+                    const l = idxLieu !== -1 ? r[idxLieu] : "";
+                    const m = idxMotif !== -1 ? r[idxMotif] : "";
+                    const n = idxNom !== -1 && r[idxNom] ? r[idxNom] : "";
+
+                    if (d || dep || arr || recVal) {
+                        const motifStr = String(m).trim().toUpperCase();
+                        const recStr = String(recVal).trim();
+                        const estRecPrise = motifStr.includes("REC") || recStr.startsWith("-");
+
+                        deplacementLignes.push({
+                            date: formaterDateExcel(d),
+                            estRecPrise: estRecPrise,
+                            depart: estRecPrise ? "" : formaterHeureExcel(dep),
+                            arrivee: estRecPrise ? "" : formaterHeureExcel(arr),
+                            pauseDeduite: false,
+                            lieu: String(l).trim(),
+                            motif: String(m).trim(),
+                            nom: String(n).trim(),
+                            recImportee: recStr
+                        });
+                    }
+                }
+
+                revaliderEtSauvegarder();
+                alert(`Importation réussie ! ${deplacementLignes.length} lignes chargées.`);
+
+            } catch (err) {
+                console.error(err);
+                alert("Erreur lors de la lecture du fichier Excel.");
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    revaliderEtSauvegarder();
+</script>
+
 </body>
 </html>
