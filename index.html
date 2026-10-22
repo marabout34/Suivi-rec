@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi Heures de Récupération</title>
     
-    <!-- Lien indispensable pour que PWABuilder et Android reconnaissent l'application -->
+    <!-- Liens pour le manifeste PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#24292e">
+    <link rel="apple-touch-icon" href="icon-512.png">
 
-    <!-- Chargement de SheetJS avec fallback hors-ligne -->
+    <!-- Chargement de SheetJS avec fallback -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
-        { box-sizing: border-box; }
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
@@ -38,6 +39,11 @@
         .summary-banner {
             background: #eeb004;
             color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
         }
         input[type="text"], input[type="date"], select {
             width: 100%;
@@ -52,7 +58,7 @@
 <body>
     <div class="container">
         <h1>Suivi Heures de Récupération</h1>
-        <!-- Le reste de votre application fonctionnelle -->
+        <div class="summary-banner">Application de suivi activée</div>
     </div>
 </body>
 </html>
